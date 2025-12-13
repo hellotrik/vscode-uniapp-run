@@ -2,7 +2,7 @@
   "name": "uniapp-run",
   "displayName": "uniapp run",
   "description": "基于HBuilderX uniapp cli启动",
-  "version": "0.0.13",
+  "version": "0.0.18",
   "engines": {
     "vscode": "^1.77.0"
   },
@@ -25,9 +25,8 @@
     "Debuggers"
   ],
   "activationEvents": [
-    "onDebug",
-    "onCommand:uniapp-run.publish",
-    "onCommand:uniapp-run.run"
+    "workspaceContains:.vscode/launch.json",
+    "onDebug"
   ],
   "icon": "images/logo.png",
   "main": "./out/extension.js",
@@ -44,7 +43,7 @@
           "description": "微信开发者工具"
         },
         "uniapp-run.baiduDevtool": {
-          "type":"string",
+          "type": "string",
           "description": "百度开发者工具"
         }
       }
@@ -90,8 +89,8 @@
                 "description": "是否运行时压缩",
                 "default": false
               },
-              "src":{
-                "type":"string",
+              "src": {
+                "type": "string",
                 "description": "项目路径，默认当前环境目录"
               },
               "openDevTool": {
@@ -99,18 +98,18 @@
                 "description": "是否运行开发者工具",
                 "default": false
               },
-              "vueVersion":{
-                "type":"string",
-                "description":"vue版本",
-                "enum":[
+              "vueVersion": {
+                "type": "string",
+                "description": "vue版本",
+                "enum": [
                   "v2",
                   "v3"
                 ],
-                "enumDescriptions":[
+                "enumDescriptions": [
                   "vue2",
                   "vue3"
                 ],
-                "default":"v2"
+                "default": "v2"
               },
               "trace": {
                 "type": "boolean",
@@ -130,7 +129,7 @@
         ]
       }
     ],
-    "commands":[
+    "commands": [
       {
         "command": "uniapp-run.publish",
         "title": "发布uniapp"
@@ -139,23 +138,15 @@
         "command": "uniapp-run.run",
         "title": "运行uniapp"
       }
-    ],
-    "views": {
-      "explorer":[
-        {
-          "id":"uniappExplorer",
-          "name":"运行uniapp",
-          "icon":"images/logo.png"
-        }
-      ] 
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "pnpm run build",
     "build": "pnpm compile",
     "compile": "node build/build.js",
     "watch": "tsc -watch -p ./",
-    "package": "pnpm vsce package --no-dependencies",
+    "bump-version": "node build/bump-version.js",
+    "package": "pnpm run bump-version && pnpm vsce package --no-dependencies",
     "publish": "pnpm vsce publish --no-dependencies",
     "pretest": "pnpm run compile && pnpm run lint",
     "lint": "eslint src --ext ts",
@@ -167,7 +158,7 @@
     "@types/node": "20.x",
     "@types/vscode": "^1.77.0",
     "@typescript-eslint/eslint-plugin": "^6.7.0",
-		"@typescript-eslint/parser": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
     "@vscode/debugadapter": "^1.59.0",
     "@vscode/debugadapter-testsupport": "^1.59.0",
     "@vscode/debugprotocol": "^1.59.0",
