@@ -4,8 +4,15 @@ export class UniappStatusBarButtons {
   private buttons: vscode.StatusBarItem[] = [];
   private static instance: UniappStatusBarButtons | null = null;
   private ctx: vscode.ExtensionContext | null = null;
+  private createTimer: NodeJS.Timeout | null = null;
+  private isCreating: boolean = false;
 
   static setup(ctx: vscode.ExtensionContext) {
+    // 如果已存在实例且正在创建，直接返回
+    if (this.instance && this.instance.isCreating) {
+      return;
+    }
+    
     if (this.instance) {
       // 如果已存在实例，先清理
       this.instance.dispose();
@@ -13,10 +20,20 @@ export class UniappStatusBarButtons {
     this.instance = new this();
     this.instance.ctx = ctx;
     this.instance.setupWatchers(ctx);
+    
+    // 清除之前的定时器
+    if (this.instance.createTimer) {
+      clearTimeout(this.instance.createTimer);
+    }
+    
     // 延迟创建按钮，确保命令已经注册且窗口已就绪
-    setTimeout(() => {
-      if (this.instance) {
+    this.instance.isCreating = true;
+    this.instance.createTimer = setTimeout(() => {
+      if (this.instance && !this.instance.buttons.length) {
         this.instance.createButtons();
+      }
+      if (this.instance) {
+        this.instance.isCreating = false;
       }
     }, 200);
   }
@@ -29,7 +46,12 @@ export class UniappStatusBarButtons {
   }
 
   private createButtons() {
-    // 先清理现有按钮
+    // 如果已经有按钮了，不重复创建
+    if (this.buttons.length > 0) {
+      return;
+    }
+    
+    // 先清理现有按钮（双重保险）
     this.disposeButtons();
 
     try {
@@ -84,9 +106,9 @@ export class UniappStatusBarButtons {
 
   private ensureButtonsVisible() {
     // 检查按钮是否存在且可见，如果不存在则重新创建
-    if (this.buttons.length === 0) {
+    if (this.buttons.length === 0 && !this.isCreating) {
       this.createButtons();
-    } else {
+    } else if (this.buttons.length > 0) {
       // 确保所有按钮都显示
       this.buttons.forEach((btn) => {
         if (btn) {
@@ -97,7 +119,12 @@ export class UniappStatusBarButtons {
   }
 
   private updateButtons() {
+    // 如果正在创建，不重复触发
+    if (this.isCreating) {
+      return;
+    }
     // 重新创建按钮
+    this.disposeButtons();
     this.createButtons();
   }
 
@@ -107,7 +134,13 @@ export class UniappStatusBarButtons {
   }
 
   private dispose() {
+    // 清除定时器
+    if (this.createTimer) {
+      clearTimeout(this.createTimer);
+      this.createTimer = null;
+    }
     this.disposeButtons();
     this.ctx = null;
+    this.isCreating = false;
   }
 }

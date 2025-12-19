@@ -33,16 +33,29 @@ export function activate(context: vscode.ExtensionContext) {
 	registerCommand("uniapp-run.publish",commands.publish);
 	registerCommand("uniapp-run.run",(ctx,logChannel)=>commands.run(ctx,logChannel));
 
+	// 防抖定时器
+	let updateTimer: NodeJS.Timeout | null = null;
+	
 	// 检查是否有 uniapp-run 配置，如果有才创建状态栏按钮
 	const updateButtons = () => {
-		if (hasUniappRunConfig()) {
-			UniappStatusBarButtons.setup(context);
-		} else {
-			// 如果配置不存在，清理按钮
-			UniappStatusBarButtons.dispose();
+		// 清除之前的定时器
+		if (updateTimer) {
+			clearTimeout(updateTimer);
 		}
+		
+		// 防抖：延迟 300ms 执行，避免频繁触发
+		updateTimer = setTimeout(() => {
+			if (hasUniappRunConfig()) {
+				UniappStatusBarButtons.setup(context);
+			} else {
+				// 如果配置不存在，清理按钮
+				UniappStatusBarButtons.dispose();
+			}
+			updateTimer = null;
+		}, 300);
 	};
 
+	// 初始检查
 	if (hasUniappRunConfig()) {
 		UniappStatusBarButtons.setup(context);
 	}
@@ -67,6 +80,13 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 	context.subscriptions.push(configWatcher);
+	
+	// 清理定时器
+	context.subscriptions.push(new vscode.Disposable(() => {
+		if (updateTimer) {
+			clearTimeout(updateTimer);
+		}
+	}));
 
 	// register debug adapter
 	UniappDebugConfigurationProvider.activate(context);
