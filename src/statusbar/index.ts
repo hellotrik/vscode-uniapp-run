@@ -55,6 +55,17 @@ export class UniappStatusBarButtons {
     this.disposeButtons();
 
     try {
+      // 固定刷新按钮：重新识别 launch 配置，优先级最高（最左侧）
+      const refreshButton = vscode.window.createStatusBarItem(
+        vscode.StatusBarAlignment.Left,
+        10030
+      );
+      refreshButton.text = "$(refresh) 重新识别";
+      refreshButton.tooltip = "重新识别 uniapp 配置";
+      refreshButton.command = "uniapp-run.refresh";
+      refreshButton.show();
+      this.buttons.push(refreshButton);
+
       // 创建"uniapp 发布"按钮
       const publishButton = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Left,

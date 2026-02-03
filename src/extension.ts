@@ -33,22 +33,35 @@ export function activate(context: vscode.ExtensionContext) {
 	registerCommand("uniapp-run.publish",commands.publish);
 	registerCommand("uniapp-run.run",(ctx,logChannel)=>commands.run(ctx,logChannel));
 
+	/** 重新识别：立即根据 launch 配置刷新状态栏按钮，无防抖 */
+	const runRefresh = () => {
+		if (updateTimer) {
+			clearTimeout(updateTimer);
+			updateTimer = null;
+		}
+		if (hasUniappRunConfig()) {
+			UniappStatusBarButtons.setup(context);
+		} else {
+			UniappStatusBarButtons.dispose();
+		}
+	};
+	registerCommand("uniapp-run.refresh", (_ctx, _logChannel) => () => {
+		runRefresh();
+		vscode.window.setStatusBarMessage("uniapp-run: 已重新识别", 2000);
+	});
+
 	// 防抖定时器
 	let updateTimer: NodeJS.Timeout | null = null;
-	
-	// 检查是否有 uniapp-run 配置，如果有才创建状态栏按钮
+
+	// 检查是否有 uniapp-run 配置，如果有才创建状态栏按钮（防抖 300ms）
 	const updateButtons = () => {
-		// 清除之前的定时器
 		if (updateTimer) {
 			clearTimeout(updateTimer);
 		}
-		
-		// 防抖：延迟 300ms 执行，避免频繁触发
 		updateTimer = setTimeout(() => {
 			if (hasUniappRunConfig()) {
 				UniappStatusBarButtons.setup(context);
 			} else {
-				// 如果配置不存在，清理按钮
 				UniappStatusBarButtons.dispose();
 			}
 			updateTimer = null;

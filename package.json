@@ -2,7 +2,7 @@
   "name": "uniapp-run",
   "displayName": "uniapp run",
   "description": "基于HBuilderX uniapp cli启动",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "engines": {
     "vscode": "^1.77.0"
   },
@@ -137,6 +137,10 @@
       {
         "command": "uniapp-run.run",
         "title": "运行uniapp"
+      },
+      {
+        "command": "uniapp-run.refresh",
+        "title": "重新识别 uniapp"
       }
     ]
   },
