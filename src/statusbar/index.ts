@@ -6,6 +6,8 @@ export class UniappStatusBarButtons {
   private ctx: vscode.ExtensionContext | null = null;
   private createTimer: NodeJS.Timeout | null = null;
   private isCreating: boolean = false;
+  private watcherDisposables: vscode.Disposable[] = [];
+  private isDisposing: boolean = false;
 
   static setup(ctx: vscode.ExtensionContext) {
     // 如果已存在实例且正在创建，直接返回
@@ -55,17 +57,6 @@ export class UniappStatusBarButtons {
     this.disposeButtons();
 
     try {
-      // 固定刷新按钮：重新识别 launch 配置，优先级最高（最左侧）
-      const refreshButton = vscode.window.createStatusBarItem(
-        vscode.StatusBarAlignment.Left,
-        10030
-      );
-      refreshButton.text = "$(refresh) 重新识别";
-      refreshButton.tooltip = "重新识别 uniapp 配置";
-      refreshButton.command = "uniapp-run.refresh";
-      refreshButton.show();
-      this.buttons.push(refreshButton);
-
       // 创建"uniapp 发布"按钮
       const publishButton = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Left,
@@ -93,11 +84,17 @@ export class UniappStatusBarButtons {
   }
 
   private setupWatchers(ctx: vscode.ExtensionContext) {
+    // 避免重复注册（理论上每个实例只会调用一次）
+    if (this.watcherDisposables.length > 0) {
+      return;
+    }
+
     // 监听工作区变化，重新创建按钮
     const workspaceWatcher = vscode.workspace.onDidChangeWorkspaceFolders(() => {
       this.updateButtons();
     });
     ctx.subscriptions.push(workspaceWatcher);
+    this.watcherDisposables.push(workspaceWatcher);
 
     // 监听窗口激活，确保按钮始终显示
     const windowStateWatcher = vscode.window.onDidChangeWindowState((state) => {
@@ -107,12 +104,7 @@ export class UniappStatusBarButtons {
       }
     });
     ctx.subscriptions.push(windowStateWatcher);
-
-    // 注册清理函数
-    const disposable = new vscode.Disposable(() => {
-      this.disposeButtons();
-    });
-    ctx.subscriptions.push(disposable);
+    this.watcherDisposables.push(windowStateWatcher);
   }
 
   private ensureButtonsVisible() {
@@ -144,14 +136,26 @@ export class UniappStatusBarButtons {
     this.buttons = [];
   }
 
+  private disposeWatchers() {
+    const disposables = this.watcherDisposables;
+    this.watcherDisposables = [];
+    disposables.forEach((d) => d.dispose());
+  }
+
   private dispose() {
+    if (this.isDisposing) {
+      return;
+    }
+    this.isDisposing = true;
     // 清除定时器
     if (this.createTimer) {
       clearTimeout(this.createTimer);
       this.createTimer = null;
     }
     this.disposeButtons();
+    this.disposeWatchers();
     this.ctx = null;
     this.isCreating = false;
+    this.isDisposing = false;
   }
 }

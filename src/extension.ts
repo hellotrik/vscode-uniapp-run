@@ -33,6 +33,17 @@ export function activate(context: vscode.ExtensionContext) {
 	registerCommand("uniapp-run.publish",commands.publish);
 	registerCommand("uniapp-run.run",(ctx,logChannel)=>commands.run(ctx,logChannel));
 
+	// 固定刷新按钮：始终常驻，不随识别结果被清理
+	const refreshButton = vscode.window.createStatusBarItem(
+		vscode.StatusBarAlignment.Left,
+		10030
+	);
+	refreshButton.text = "$(refresh) 重新识别";
+	refreshButton.tooltip = "重新识别 uniapp 配置";
+	refreshButton.command = "uniapp-run.refresh";
+	refreshButton.show();
+	context.subscriptions.push(refreshButton);
+
 	/** 重新识别：立即根据 launch 配置刷新状态栏按钮，无防抖 */
 	const runRefresh = () => {
 		if (updateTimer) {
