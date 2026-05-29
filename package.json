@@ -65,14 +65,16 @@
             "properties": {
               "platform": {
                 "type": "string",
-                "description": "启动模式: mp-weixin,mp-alipay,mp-baidu等",
+                "description": "启动模式: mp-weixin, app-android, app-ios 等",
                 "enum": [
                   "mp-weixin",
                   "mp-alipay",
                   "mp-baidu",
                   "mp-toutiao",
                   "mp-lark",
-                  "mp-qq"
+                  "mp-qq",
+                  "app-android",
+                  "app-ios"
                 ],
                 "enumDescriptions": [
                   "微信小程序",
@@ -80,9 +82,47 @@
                   "百度小程序",
                   "头条小程序",
                   "飞书小程序",
-                  "QQ小程序"
+                  "QQ小程序",
+                  "运行到 Android 真机/模拟器（HBuilderX cli launch）",
+                  "运行到 iOS 真机/模拟器（HBuilderX cli launch）"
                 ],
                 "default": "mp-weixin"
+              },
+              "deviceId": {
+                "type": "string",
+                "description": "设备序列号（app-android / app-ios）；未配置且多台设备时会提示选择"
+              },
+              "playground": {
+                "type": "string",
+                "description": "基座类型（app-android / app-ios）",
+                "enum": ["standard", "custom"],
+                "default": "standard"
+              },
+              "nativeLog": {
+                "type": "boolean",
+                "description": "是否显示原生日志（app-android）",
+                "default": false
+              },
+              "iosTarget": {
+                "type": "string",
+                "description": "iOS 运行目标（app-ios）",
+                "enum": ["device", "simulator"],
+                "default": "device"
+              },
+              "compileOnly": {
+                "type": "boolean",
+                "description": "仅编译不安装运行（app-android / app-ios）",
+                "default": false
+              },
+              "continueOnError": {
+                "type": "boolean",
+                "description": "编译错误后继续运行（app-android / app-ios）",
+                "default": false
+              },
+              "cleanCache": {
+                "type": "boolean",
+                "description": "清理构建缓存（主要 uni-app x）",
+                "default": false
               },
               "compress": {
                 "type": "boolean",

@@ -1,75 +1,77 @@
 import { DebugProtocol } from "@vscode/debugprotocol";
-import { DebugSession, ExitedEvent, InitializedEvent, Logger, OutputEvent, TerminatedEvent, logger } from "@vscode/debugadapter";
-import * as vscode from 'vscode';
+import {
+  DebugSession,
+  ExitedEvent,
+  InitializedEvent,
+  Logger,
+  OutputEvent,
+  TerminatedEvent,
+  logger,
+} from "@vscode/debugadapter";
+import * as vscode from "vscode";
+import * as path from "path";
 import { getUniappConfig } from "../context";
 import { UniappDebugProcess } from "../core/uniapp/process";
 import { UnappRunConfig, UniappRuntimeArgs, runtimeArgs } from "../core/uniapp";
+import {
+  HbxLaunchProcess,
+  HbxLaunchConfig,
+  isAppLaunchPlatform,
+  AppLaunchPlatform,
+} from "../core/hbx";
+
 interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments {
-  /**
-   * 编译类型
-   */
   platform: string;
-  /**
-   * 当前项目路径
-   */
-  cwd:string;
-  /**
-   * 目标项目路径
-   */
+  cwd: string;
   src: string;
-  /**
-   * 项目名称
-   */
-  projectName:string;
-  /**
-   * 是否压缩
-   */
+  projectName: string;
   compress: boolean;
-  /**
-   * uniapp 的vue版本
-   */
   vueVersion: "v2" | "v3";
-  /**
-   * 是否打开开发者工具
-   */
   openDevTool: boolean;
-  /**
-   * 是否打开调试
-   */
   trace: boolean;
+  deviceId?: string;
+  playground?: "standard" | "custom";
+  nativeLog?: boolean;
+  iosTarget?: "device" | "simulator";
+  compileOnly?: boolean;
+  continueOnError?: boolean;
+  cleanCache?: boolean;
 }
 
-export class UniappDebugSession extends DebugSession {
-  private _runtime: UniappDebugProcess;
-  private _config:UnappRunConfig
-  constructor(public logger:vscode.LogOutputChannel){
-    super();
-    logger.info("uniapp-run debug session start ....")
-    this._config= getUniappConfig()
-    this._runtime=new UniappDebugProcess(this._config,logger);
+type RunProcess = UniappDebugProcess | HbxLaunchProcess;
 
-    this._runtime.on("data", (data) => {
+export class UniappDebugSession extends DebugSession {
+  private _runtime?: RunProcess;
+  private _config?: UnappRunConfig;
+
+  constructor(public logger: vscode.LogOutputChannel) {
+    super();
+    logger.info("uniapp-run debug session start ....");
+    this._config = getUniappConfig();
+  }
+
+  private bindRuntime(runtime: RunProcess): void {
+    runtime.on("data", (data: string) => {
       this.sendEvent(new OutputEvent(data));
     });
-    this._runtime.on("stdout", (data: string) => {
+    runtime.on("stdout", (data: string) => {
       this.sendEvent(new OutputEvent(data, "stdout"));
     });
-    this._runtime.on("stderr", (data: string) => {
+    runtime.on("stderr", (data: string) => {
       this.sendEvent(new OutputEvent(data, "stderr"));
     });
-    this._runtime.on("exit", (code: number) => {
+    runtime.on("exit", (code: number) => {
       this.sendEvent(new ExitedEvent(code));
     });
-    this._runtime.on("end", () => {
+    runtime.on("end", () => {
       this.sendEvent(new TerminatedEvent());
     });
-
   }
+
   protected initializeRequest(
     response: DebugProtocol.InitializeResponse,
     args: DebugProtocol.InitializeRequestArguments
   ): void {
-    //设置Debug能力
     response.body = response.body || {};
     response.body = {
       supportsCompletionsRequest: false,
@@ -91,78 +93,107 @@ export class UniappDebugSession extends DebugSession {
     this.sendEvent(new InitializedEvent());
   }
 
-  /**
-   * configurationDone后通知launchRequest
-   */
   protected configurationDoneRequest(
     response: DebugProtocol.ConfigurationDoneResponse,
     args: DebugProtocol.ConfigurationDoneArguments
   ): void {
     super.configurationDoneRequest(response, args);
-    // this._configurationDone.notify();
   }
-  /**
-   * 断开
-   */
+
   protected async disconnectRequest(
     response: DebugProtocol.DisconnectResponse,
     args: DebugProtocol.DisconnectArguments,
     request?: DebugProtocol.Request
   ) {
-    //关闭
     await this._runtime?.stop();
-
     this.sendResponse(response);
   }
 
-  /**
-   * Launch 模式初始化代码
-   */
   protected async launchRequest(
     response: DebugProtocol.LaunchResponse,
     args: LaunchRequestArguments
   ) {
-    logger.setup(args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop, false);
-    const uniappConfig= getUniappConfig();
-    if(!uniappConfig){
-      // vscode.window.showErrorMessage('请设置HBuilderX路径');
-      this.sendEvent(
-        new OutputEvent('请设置HBuilderX路径', 'stderr')
-      )
-      // 终止debug
-      this.sendErrorResponse(
-        response,
-        {
-          id: 201,
-          format: '请设置HBuilderX路径',
-          showUser: false,
-          sendTelemetry: true,
-        }
-      )
-      //  打开设置
-      vscode.window.
-        showErrorMessage('请设置HBuilderX路径', { modal: true }, { title: '打开设置' })
+    logger.setup(
+      args.trace ? Logger.LogLevel.Verbose : Logger.LogLevel.Stop,
+      false
+    );
+    const uniappConfig = getUniappConfig();
+    if (!uniappConfig) {
+      this.sendEvent(new OutputEvent("请设置HBuilderX路径", "stderr"));
+      this.sendErrorResponse(response, {
+        id: 201,
+        format: "请设置HBuilderX路径",
+        showUser: false,
+        sendTelemetry: true,
+      });
+      vscode.window
+        .showErrorMessage("请设置HBuilderX路径", { modal: true }, {
+          title: "打开设置",
+        })
         .then((item) => {
           if (item) {
-            vscode.commands.executeCommand('workbench.action.openSettings', '@ext:hb0730.uniapp-run');
+            vscode.commands.executeCommand(
+              "workbench.action.openSettings",
+              "@ext:hb0730.uniapp-run"
+            );
           }
         });
-
       return;
     }
-    //启动
-    const _args:runtimeArgs={
-      workPath: args.src||args.cwd,
-      name: args.projectName,
-      platform: args.platform,
-      compress: args.compress||false,
-      uniVueVersion: args.vueVersion||'v2',
-      openDevTools: args.openDevTool||false,
-      production: false
+
+    const workPath = path.normalize(args.src || args.cwd);
+
+    if (isAppLaunchPlatform(args.platform)) {
+      const runtime = new HbxLaunchProcess(uniappConfig, this.logger);
+      this.bindRuntime(runtime);
+      this._runtime = runtime;
+
+      const launchConfig: HbxLaunchConfig = {
+        platform: args.platform as AppLaunchPlatform,
+        projectPath: workPath,
+        deviceId: args.deviceId,
+        playground: args.playground,
+        nativeLog: args.nativeLog,
+        iosTarget: args.iosTarget ?? "device",
+        compileOnly: args.compileOnly,
+        continueOnError: args.continueOnError,
+        cleanCache: args.cleanCache,
+      };
+
+      if (!launchConfig.deviceId) {
+        this.sendEvent(
+          new OutputEvent(
+            "未指定 deviceId。请在 launch.json 配置 deviceId，或启动时从设备列表中选择。\n",
+            "stderr"
+          )
+        );
+        this.sendErrorResponse(response, {
+          id: 202,
+          format: "请选择设备后再运行（配置 deviceId 或启动时选择设备）",
+          showUser: true,
+          sendTelemetry: false,
+        });
+        return;
+      }
+
+      await runtime.start(launchConfig);
+    } else {
+      const runtime = new UniappDebugProcess(uniappConfig, this.logger);
+      this.bindRuntime(runtime);
+      this._runtime = runtime;
+
+      const _args: runtimeArgs = {
+        workPath,
+        name: args.projectName,
+        platform: args.platform,
+        compress: args.compress || false,
+        uniVueVersion: args.vueVersion || "v2",
+        openDevTools: args.openDevTool || false,
+        production: false,
+      };
+      await runtime.start(new UniappRuntimeArgs(_args, uniappConfig));
     }
-    await this._runtime?.start(new UniappRuntimeArgs(_args,uniappConfig));
+
     this.sendResponse(response);
   }
-
-
 }

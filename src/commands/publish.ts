@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import { publishCommand } from "../core/uniapp/command";
 import { getUniappConfig } from "../context";
 import { UnappRunConfig, UniappRuntimeArgs, runtimeArgs } from "../core/uniapp";
+import { isAppPublishPlatform } from "../core/hbx";
 import path = require("path");
 
 export const publish: CommandFactory = (
@@ -56,6 +57,14 @@ export const publish: CommandFactory = (
       vscode.window.showErrorMessage("没有找到配置");
       return;
     }
+
+    if (isAppPublishPlatform(defaultConfig.platform)) {
+      vscode.window.showWarningMessage(
+        "App 平台发行/云打包请使用 HBuilderX CLI：cli pack（详见 https://hx.dcloud.net.cn/cli/pack ）"
+      );
+      return;
+    }
+
     const conf: UnappRunConfig = getUniappConfig();
     if (!conf) {
       //  打开设置

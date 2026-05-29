@@ -9,8 +9,10 @@
 			"name": "Run Extension",
 			"type": "extensionHost",
 			"request": "launch",
+			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"${workspaceFolder}/.vscode/dev-wms-app.code-workspace"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"

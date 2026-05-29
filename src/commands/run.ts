@@ -1,5 +1,6 @@
 import { CommandFactory } from ".";
 import * as vscode from "vscode";
+import { resolveAppLaunchDevice } from "../core/hbx/resolveDevice";
 
 export const run: CommandFactory = () => {
   return async (conf: string | vscode.DebugConfiguration) => {
@@ -50,6 +51,11 @@ export const run: CommandFactory = () => {
       return;
     }
 
-    vscode.debug.startDebugging(currentWorkspace, defaultConfig);
+    const launchConfig = await resolveAppLaunchDevice({ ...defaultConfig });
+    if (!launchConfig) {
+      return;
+    }
+
+    vscode.debug.startDebugging(currentWorkspace, launchConfig);
   };
 };
