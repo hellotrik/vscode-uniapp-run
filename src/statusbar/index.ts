@@ -57,24 +57,24 @@ export class UniappStatusBarButtons {
     this.disposeButtons();
 
     try {
-      // 创建"uniapp 发布"按钮
+      // 创建 uni-pub 按钮
       const publishButton = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Left,
         10020
       );
-      publishButton.text = "$(rocket) uniapp 发布";
-      publishButton.tooltip = "uniapp 发布";
+      publishButton.text = "$(rocket) uni-pub";
+      publishButton.tooltip = "uni-pub";
       publishButton.command = "uniapp-run.publish";
       publishButton.show();
       this.buttons.push(publishButton);
 
-      // 创建"uniapp 构建"按钮
+      // 创建 uni-dev 按钮
       const buildButton = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Left,
         10010
       );
-      buildButton.text = "$(debug) uniapp 构建";
-      buildButton.tooltip = "uniapp 构建";
+      buildButton.text = "$(debug) uni-dev";
+      buildButton.tooltip = "uni-dev";
       buildButton.command = "uniapp-run.run";
       buildButton.show();
       this.buttons.push(buildButton);

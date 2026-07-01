@@ -2,7 +2,7 @@
   "name": "uniapp-run",
   "displayName": "uniapp run",
   "description": "基于HBuilderX uniapp cli启动",
-  "version": "0.0.24",
+  "version": "0.0.25",
   "engines": {
     "vscode": "^1.77.0"
   },
@@ -95,7 +95,10 @@
               "playground": {
                 "type": "string",
                 "description": "基座类型（app-android / app-ios）",
-                "enum": ["standard", "custom"],
+                "enum": [
+                  "standard",
+                  "custom"
+                ],
                 "default": "standard"
               },
               "nativeLog": {
@@ -106,7 +109,10 @@
               "iosTarget": {
                 "type": "string",
                 "description": "iOS 运行目标（app-ios）",
-                "enum": ["device", "simulator"],
+                "enum": [
+                  "device",
+                  "simulator"
+                ],
                 "default": "device"
               },
               "compileOnly": {
@@ -172,15 +178,15 @@
     "commands": [
       {
         "command": "uniapp-run.publish",
-        "title": "发布uniapp"
+        "title": "uni-pub"
       },
       {
         "command": "uniapp-run.run",
-        "title": "运行uniapp"
+        "title": "uni-dev"
       },
       {
         "command": "uniapp-run.refresh",
-        "title": "重新识别 uniapp"
+        "title": "uni"
       }
     ]
   },

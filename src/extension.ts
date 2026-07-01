@@ -38,7 +38,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.StatusBarAlignment.Left,
 		10030
 	);
-	refreshButton.text = "$(refresh) 重新识别";
+	refreshButton.text = "$(refresh) uni";
 	refreshButton.tooltip = "重新识别 uniapp 配置";
 	refreshButton.command = "uniapp-run.refresh";
 	refreshButton.show();
