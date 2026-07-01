@@ -4,6 +4,7 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"id": "uniapp-run-watch",
 			"type": "npm",
 			"script": "watch",
 			"problemMatcher": "$tsc-watch",
@@ -14,6 +15,70 @@
 			"group": {
 				"kind": "build",
 				"isDefault": true
+			},
+			"icon": {
+				"id": "watch",
+				"tooltip": "TypeScript 监视编译"
+			}
+		},
+		{
+			"id": "uniapp-run-pack",
+			"label": "uniapp-run: 打包",
+			"type": "shell",
+			"command": "bash abs/sh/pack-uniapp-run.sh",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "build",
+			"problemMatcher": [],
+			"icon": {
+				"id": "archive",
+				"tooltip": "升版 patch +1 → compile → dist/uniapp-run-<version>.vsix"
+			}
+		},
+		{
+			"id": "uniapp-run-pack-no-bump",
+			"label": "uniapp-run: 打包（不升版）",
+			"type": "shell",
+			"command": "bash abs/sh/pack-uniapp-run.sh --no-bump",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "build",
+			"problemMatcher": [],
+			"icon": {
+				"id": "package",
+				"tooltip": "按当前版本打包 vsix"
+			}
+		},
+		{
+			"id": "uniapp-run-install",
+			"label": "uniapp-run: 安装",
+			"type": "shell",
+			"command": "bash abs/sh/install-uniapp-run.sh",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "none",
+			"problemMatcher": [],
+			"icon": {
+				"id": "desktop-download",
+				"tooltip": "安装最新 vsix 到 Cursor / VS Code"
+			}
+		},
+		{
+			"id": "uniapp-run-pack-install",
+			"label": "uniapp-run: 打包并安装",
+			"type": "shell",
+			"command": "bash abs/sh/install-uniapp-run.sh --pack",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "none",
+			"problemMatcher": [],
+			"icon": {
+				"id": "rocket",
+				"tooltip": "强制重新打包后安装到本机"
 			}
 		}
 	]
